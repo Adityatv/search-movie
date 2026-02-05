@@ -9,19 +9,35 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; }
-        .movie-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .movie-card:hover { transform: translateY(-6px); border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+        
+        .movie-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .movie-card:hover { 
+            transform: translateY(-6px); 
+            border-color: rgba(56, 189, 248, 0.4); 
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); 
+        }
+        
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); }
         
-        /* Custom Loading Spinner Animation */
-        @keyframes orbit {
-            0% { transform: rotate(0deg) translateX(5px) rotate(0deg); }
-            100% { transform: rotate(360deg) translateX(5px) rotate(-360deg); }
+        /* Ensure long titles break correctly and don't overflow */
+        .movie-title {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            min-height: 3rem;
         }
-        .orbit-dot { animation: orbit 1.5s linear infinite; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen selection:bg-sky-500/30">
+<body class="text-slate-100 min-h-screen selection:bg-sky-500/30 custom-scrollbar">
 
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 glass border-b border-white/5">
@@ -61,7 +77,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-8">
         
-        <!-- Home Header (Shown on load) -->
+        <!-- Home Header -->
         <div id="homeHeader" class="mb-12">
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                 <div>
@@ -69,11 +85,11 @@
                     <p class="text-slate-400 text-lg">Auto-scanning JSON database for the latest releases.</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="px-4 py-3 bg-slate-900 rounded-2xl border border-white/5 text-sm flex flex-col">
-                        <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Volumes Found</span> 
+                    <div class="px-4 py-3 bg-slate-900 rounded-2xl border border-white/5 text-sm flex flex-col min-w-[120px]">
+                        <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Volumes</span> 
                         <span id="dbVolumes" class="font-bold text-sky-400 text-base">Scanning...</span>
                     </div>
-                    <div class="px-4 py-3 bg-slate-900 rounded-2xl border border-white/5 text-sm flex flex-col">
+                    <div class="px-4 py-3 bg-slate-900 rounded-2xl border border-white/5 text-sm flex flex-col min-w-[120px]">
                         <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Total Movies</span> 
                         <span id="totalMovies" class="font-bold text-white text-base">0</span>
                     </div>
@@ -82,7 +98,7 @@
 
             <div class="flex items-center gap-2 mb-6 text-sky-400">
                 <i data-lucide="sparkles" class="w-5 h-5"></i>
-                <h2 class="text-xl font-bold text-white">Recommended Picks</h2>
+                <h2 class="text-xl font-bold text-white">Recommended For You</h2>
             </div>
             <div id="topPicksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Top picks injected here -->
@@ -118,6 +134,7 @@
         
         let allMovies = [];
         let volumesLoaded = 0;
+        let homePicks = [];
 
         const movieGrid = document.getElementById('movieGrid');
         const topPicksGrid = document.getElementById('topPicksGrid');
@@ -146,31 +163,37 @@
         }
 
         function createCard(movie) {
-            const id = movie[0];
-            const name = movie[1];
-            const size = movie[2];
+            // Check if movie is actually an array/object to prevent text-dumping
+            if (!movie || (typeof movie !== 'object' && !Array.isArray(movie))) return '';
+
+            // Handle both object {id, name, size} and array [id, name, size] formats
+            const id = Array.isArray(movie) ? movie[0] : movie.id;
+            const name = Array.isArray(movie) ? movie[1] : movie.name;
+            const size = Array.isArray(movie) ? movie[2] : movie.size;
+
+            if (!id || !name) return '';
 
             return `
-                <div class="movie-card group bg-slate-900/40 border border-white/5 rounded-[2.5rem] p-6 flex flex-col h-full shadow-xl">
-                    <div class="flex justify-between items-start mb-4">
+                <div class="movie-card group bg-slate-900/60 border border-white/10 rounded-[2.5rem] p-6 flex flex-col shadow-xl">
+                    <div class="flex justify-between items-start mb-5">
                         <div class="w-12 h-12 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/10 group-hover:bg-sky-500 group-hover:scale-110 transition-all duration-500">
                             <i data-lucide="film" class="w-6 h-6 text-sky-400 group-hover:text-white transition-colors"></i>
                         </div>
-                        <span class="px-3 py-1 bg-slate-950 text-sky-400 text-[10px] font-black rounded-xl border border-white/5 uppercase tracking-tighter shadow-inner">
+                        <span class="px-3 py-1 bg-slate-950 text-sky-400 text-[10px] font-black rounded-xl border border-white/5 uppercase tracking-wider shadow-inner">
                             ${getQuality(name)}
                         </span>
                     </div>
                     
-                    <h3 class="font-bold text-slate-100 line-clamp-2 mb-6 group-hover:text-sky-400 transition-colors h-12 leading-snug text-lg">
+                    <h3 class="movie-title font-bold text-slate-100 mb-6 group-hover:text-sky-400 transition-colors leading-snug text-lg">
                         ${name}
                     </h3>
                     
                     <div class="mt-auto space-y-5">
-                        <div class="flex justify-between items-center bg-white/5 px-4 py-2 rounded-xl">
+                        <div class="flex justify-between items-center bg-white/5 px-4 py-2.5 rounded-xl border border-white/5">
                             <span class="text-[10px] uppercase font-black text-slate-500 tracking-widest">Weight</span>
                             <span class="text-xs font-bold text-slate-300">${formatBytes(size)}</span>
                         </div>
-                        <a href="${BOT_URL}${id}" target="_blank" class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg">
+                        <a href="${BOT_URL}${id}" target="_blank" class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-sky-500/5">
                             Get File <i data-lucide="arrow-right" class="w-4 h-4"></i>
                         </a>
                     </div>
@@ -178,14 +201,18 @@
             `;
         }
 
+        // Helper to pick random items from an array
+        function getRandomSubset(arr, count) {
+            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
         // --- DYNAMIC AUTO-DISCOVERY LOADER ---
         async function init() {
             let volumeIndex = 0;
             let keepScanning = true;
-            let homePicks = [];
 
             while (keepScanning) {
-                // Determine file name: movies.json, then movies1.json, movies2.json...
                 const fileName = volumeIndex === 0 ? 'movies.json' : `movies${volumeIndex}.json`;
                 
                 try {
@@ -198,43 +225,52 @@
                             allMovies = allMovies.concat(data);
                             volumesLoaded++;
                             
-                            // Visual update for the counter
                             dbVolumes.innerText = `${volumesLoaded} Volume${volumesLoaded > 1 ? 's' : ''}`;
                             totalMovies.innerText = allMovies.toLocaleString();
                             
-                            // Take first 2 from each volume for top picks
-                            if (homePicks.length < 8) {
-                                homePicks.push(...data.slice(0, 2));
-                            }
+                            // Randomly pick 2 movies from this volume for Recommended section
+                            const randomFromVolume = getRandomSubset(data, 2);
+                            homePicks = [...homePicks, ...randomFromVolume];
 
-                            // Refresh display incrementally so user sees data immediately
-                            renderMovies(allMovies.slice(0, 20), movieGrid);
-                            topPicksGrid.innerHTML = homePicks.slice(0, 4).map(m => createCard(m)).join('');
-                            lucide.createIcons();
+                            // Refresh display incrementally
+                            updateDisplay();
                         }
                         volumeIndex++;
                     } else {
-                        // Stop if we hit a 404 (file not found)
                         keepScanning = false;
                     }
                 } catch (e) {
-                    // Stop on any error
                     keepScanning = false;
                 }
                 
-                // Safety break to prevent infinite loops if something goes wrong
-                if (volumeIndex > 100) break;
+                if (volumeIndex > 50) break; // Limit scanning to 50 files for safety
             }
 
             if (volumesLoaded === 0) {
-                movieGrid.innerHTML = `<div class="col-span-full py-20 text-center text-red-400">Error: Could not find movies.json. Please upload at least one JSON file.</div>`;
+                movieGrid.innerHTML = `<div class="col-span-full py-20 text-center text-red-400">Error: Could not find movies.json. Please upload your database files.</div>`;
             }
         }
 
+        function updateDisplay() {
+            // Render Recommended Picks (Top 4 randomly selected across all loaded volumes)
+            topPicksGrid.innerHTML = homePicks.slice(0, 4).map(m => createCard(m)).join('');
+            
+            // Render Main Grid (Latest 20)
+            if (!searchInput.value.trim()) {
+                renderMovies(allMovies.slice(0, 20), movieGrid);
+            }
+            lucide.createIcons();
+        }
+
         function renderMovies(movies, container) {
-            container.innerHTML = movies.length > 0 
-                ? movies.map(m => createCard(m)).join('')
-                : `<div class="col-span-full py-20 text-center text-slate-500">No matches found across ${volumesLoaded} volumes.</div>`;
+            // Ensure movies is an array and filter out any invalid items
+            const validMovies = Array.isArray(movies) ? movies.filter(m => m !== null) : [];
+            
+            if (validMovies.length > 0) {
+                container.innerHTML = validMovies.map(m => createCard(m)).join('');
+            } else {
+                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500">No matches found across ${volumesLoaded} volumes.</div>`;
+            }
             lucide.createIcons();
         }
 
@@ -245,22 +281,19 @@
             const words = query.toLowerCase().split(' ').filter(w => w.length > 0);
             
             const scored = allMovies.map(movie => {
-                const name = movie[1].toLowerCase();
+                const name = (Array.isArray(movie) ? movie[1] : movie.name).toLowerCase();
                 let score = 0;
                 let matchesAll = true;
 
                 words.forEach(word => {
                     if (name.includes(word)) {
-                        score += 2; // Word found
+                        score += 2;
                     } else {
                         matchesAll = false;
                     }
                 });
 
-                // Phrase Match: If keywords appear in the same order
                 if (name.includes(query.toLowerCase())) score += 10;
-                
-                // Complete Match: All words present
                 if (matchesAll) score += 20;
 
                 return { movie, score };
@@ -285,14 +318,13 @@
                     homeHeader.classList.add('hidden');
                     searchStats.classList.remove('hidden');
                     resultCount.innerText = results.length;
-                    document.getElementById('gridTitle').innerText = `Results from All Volumes`;
+                    document.getElementById('gridTitle').innerText = `Search Results`;
                 } else {
                     homeHeader.classList.remove('hidden');
                     searchStats.classList.add('hidden');
                     document.getElementById('gridTitle').innerText = "Latest Discoveries";
                 }
 
-                // Show top 100 search results for performance
                 renderMovies(results.slice(0, 100), movieGrid); 
                 loadingCircle.classList.add('hidden');
             }, 300);
