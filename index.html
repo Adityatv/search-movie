@@ -2,139 +2,59 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ADTV Movies</title>
+<title>Telegram Movie Search</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-/* ===== BASE ===== */
 body {
-  margin: 0;
-  font-family: Inter, Arial, sans-serif;
+  font-family: Arial, sans-serif;
   background: #0f0f0f;
   color: #fff;
-}
-
-/* ===== OVERLAY ===== */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 9999;
-  animation: fadeIn .4s ease;
+  align-items: center;
+  height: 100vh;
 }
-
-/* ===== POPUP ===== */
-.popup {
-  background: #151515;
-  border-radius: 14px;
-  width: 92%;
-  max-width: 420px;
-  padding: 22px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.6);
-  animation: scaleIn .4s ease;
-}
-
-.popup h2 {
-  margin: 0 0 12px;
-  font-size: 22px;
-  text-align: center;
-}
-
-.popup p, .popup li {
-  font-size: 14px;
-  color: #d0d0d0;
-  line-height: 1.6;
-}
-
-.popup ul {
-  padding-left: 18px;
-  margin: 10px 0;
-}
-
-/* ===== BUTTONS ===== */
-.btn {
-  width: 100%;
-  padding: 14px;
-  margin-top: 14px;
-  font-size: 15px;
-  font-weight: 600;
+button {
+  padding: 15px 25px;
+  font-size: 16px;
+  background: #0088cc;
   border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  background: linear-gradient(135deg,#0088cc,#00b2ff);
+  border-radius: 6px;
   color: #fff;
+  cursor: pointer;
 }
-
-.btn:active {
-  transform: scale(.97);
+button:hover {
+  background: #006fa3;
 }
-
-.close-btn {
+.note {
   margin-top: 12px;
-  background: #2a2a2a;
-  display: none;
-}
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeIn {
-  from { opacity: 0 }
-  to { opacity: 1 }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(.85); opacity: 0 }
-  to { transform: scale(1); opacity: 1 }
+  font-size: 13px;
+  color: #bbb;
 }
 </style>
 </head>
-
 <body>
 
-<!-- ===== JOIN POPUP ===== -->
-<div class="overlay" id="joinPopup">
-  <div class="popup">
-    <h2>Join Telegram Group</h2>
-    <p>To use movie search, you must first join our Telegram group.</p>
-    <button class="btn" onclick="joinGroup()">Join @adtvmovies</button>
-  </div>
-</div>
-
-<!-- ===== HOW TO USE POPUP ===== -->
-<div class="overlay" id="howPopup" style="display:none;">
-  <div class="popup">
-    <h2>How to Use</h2>
-    <ul>
-      <li>First join our Telegram group</li>
-      <li>Search your movie on website</li>
-      <li>Click on <b>Get File</b></li>
-      <li>You will get a Telegram share option</li>
-      <li>Share that code in our movie group</li>
-    </ul>
-    <p><b>You will get results ✅</b></p>
-
-    <button class="btn close-btn" id="closeHow" onclick="closeHow()">Close</button>
+<div>
+  <button onclick="searchMovie()">
+    Get Movie
+  </button>
+  <div class="note">
+    Make sure you joined <b>@adtvmovies</b> first
   </div>
 </div>
 
 <script>
-/* ===== JOIN FLOW ===== */
-function joinGroup() {
-  window.open("https://t.me/adtvmovies", "_blank");
+function searchMovie() {
+  const movie =
+    "The Bequeathed S01 COMBINED 720p NF [Org Hindi DDP5.1 ~ 192Kbps + Korean AAC2.0] ESubs";
 
-  document.getElementById("joinPopup").style.display = "none";
-  document.getElementById("howPopup").style.display = "flex";
+  // COMMAND ONLY — NO GROUP URL
+  const text = encodeURIComponent(`/movie ${movie}`);
 
-  // show close button after 5 seconds
-  setTimeout(() => {
-    document.getElementById("closeHow").style.display = "block";
-  }, 5000);
-}
+  const tgLink = `https://t.me/share/url?text=${text}`;
 
-function closeHow() {
-  document.getElementById("howPopup").style.display = "none";
+  window.open(tgLink, "_blank");
 }
 </script>
 
