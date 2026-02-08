@@ -1,127 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADTV Movies</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRIXZY MOVIES - Pro Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0f0f0f;
-  color: #fff;
-}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; }
 
-header {
-  padding: 15px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: bold;
-  background: #111;
-}
-
-.search-box {
-  padding: 15px;
-  text-align: center;
-}
-
-.search-box input {
-  width: 90%;
-  max-width: 400px;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 16px;
-}
-
-.results {
-  padding: 15px;
-}
-
-.card {
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 12px;
-}
-
-.card h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-
-.get-btn {
-  display: block;
-  text-align: center;
-  background: #fff;
-  color: #000;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  user-select: none;
-}
-
-.get-btn:active {
-  transform: scale(0.97);
-}
-</style>
+        .movie-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .movie-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3);
+        }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); }
+        .movie-title { word-break: break-word; min-height: 3rem; }
+    </style>
 </head>
 
-<body>
+<body class="text-slate-100 min-h-screen">
 
-<header>ADTV Movies</header>
+<!-- NAVBAR -->
+<nav class="sticky top-0 z-50 glass border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+            <div class="bg-sky-500 p-2 rounded-2xl">
+                <i data-lucide="film" class="w-6 h-6 text-white"></i>
+            </div>
+            <span class="text-xl font-extrabold uppercase hidden md:block">
+                Crixzy<span class="text-sky-500">Movies</span>
+            </span>
+        </div>
 
-<div class="search-box">
-  <input type="text" id="searchInput" placeholder="Search movie..." oninput="searchMovies()">
-</div>
+        <input id="searchInput"
+               type="text"
+               placeholder="Search titles immediately..."
+               class="w-full max-w-xl px-5 py-3 bg-slate-900 border border-white/10 rounded-2xl">
+    </div>
+</nav>
 
-<div class="results" id="results"></div>
+<!-- CONTENT -->
+<main class="max-w-7xl mx-auto px-4 py-10">
+    <div id="movieGrid"
+         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    </div>
+</main>
 
 <script>
-// SAMPLE DATA (replace with your real results later)
-const movies = [
-  "The Bequeathed S01 COMBINED 720p NF",
-  "Vikings S06 1080p",
-  "Money Heist S05 720p",
-  "KGF Chapter 2 1080p"
-];
+/* ==============================
+   TELEGRAM GROUP CONFIG
+================================ */
+const TG_GROUP = "https://t.me/adtvmovies?text=";
 
-// SEARCH LOGIC (UNCHANGED)
-function searchMovies() {
-  const q = document.getElementById("searchInput").value.toLowerCase();
-  const res = document.getElementById("results");
-  res.innerHTML = "";
+/* ==============================
+   APP LOGIC
+================================ */
+let allMovies = [];
+const movieGrid = document.getElementById("movieGrid");
+const searchInput = document.getElementById("searchInput");
 
-  movies
-    .filter(m => m.toLowerCase().includes(q))
-    .forEach(movie => {
-      res.innerHTML += `
-        <div class="card">
-          <h3>${movie}</h3>
-          <div class="get-btn" onclick="shareToTelegram('${escapeQuotes(movie)}')">
-            Get File
-          </div>
+function formatBytes(bytes) {
+    if (!bytes) return "Unknown";
+    const sizes = ["B","KB","MB","GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
+}
+
+function getQuality(name) {
+    const n = name.toLowerCase();
+    if (n.includes("2160p") || n.includes("4k")) return "4K";
+    if (n.includes("1080p")) return "1080p";
+    if (n.includes("720p")) return "720p";
+    return "HD";
+}
+
+function createCard(movie) {
+    const name = movie[1];
+    const size = movie[2];
+    const command = encodeURIComponent(`/movie ${name}`);
+
+    return `
+    <div class="movie-card bg-slate-900/60 border border-white/10 rounded-[2.5rem] p-6">
+        <div class="flex justify-between items-start mb-4">
+            <i data-lucide="film" class="w-6 h-6 text-sky-400"></i>
+            <span class="text-xs px-3 py-1 bg-slate-950 rounded-xl border border-white/5">
+                ${getQuality(name)}
+            </span>
         </div>
-      `;
-    });
+
+        <h3 class="movie-title font-bold text-lg mb-6">${name}</h3>
+
+        <div class="mt-auto space-y-4">
+            <div class="flex justify-between bg-white/5 px-4 py-2 rounded-xl text-xs">
+                <span>Size</span>
+                <span>${formatBytes(size)}</span>
+            </div>
+
+            <a href="${TG_GROUP}${command}" target="_blank"
+               class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 transition-all">
+                Get File <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </div>
+    `;
 }
 
-// 🔥 ONLY FIX THAT MATTERS
-function shareToTelegram(movieName) {
-  const text = encodeURIComponent("/movie " + movieName);
-  const shareUrl = "https://t.me/share/url?text=" + text;
-
-  // MUST be direct user click
-  window.open(shareUrl, "_blank");
+function render(list) {
+    movieGrid.innerHTML = list.map(createCard).join("");
+    lucide.createIcons();
 }
 
-// SAFETY
-function escapeQuotes(str) {
-  return str.replace(/'/g, "\\'");
+async function init() {
+    const res = await fetch("movies.json");
+    allMovies = await res.json();
+    render(allMovies.slice(0, 40));
 }
+
+searchInput.addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+    const results = allMovies.filter(m => m[1].toLowerCase().includes(q));
+    render(results.slice(0, 50));
+});
+
+init();
 </script>
 
 </body>
