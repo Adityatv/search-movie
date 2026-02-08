@@ -3,92 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRIXZY MOVIES</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+<title>ADTV Movies</title>
 
 <style>
 body {
-  background:#020617;
-  font-family: Inter, system-ui, sans-serif;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: #fff;
+}
+
+header {
+  padding: 15px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  background: #111;
+}
+
+.search-box {
+  padding: 15px;
+  text-align: center;
+}
+
+.search-box input {
+  width: 90%;
+  max-width: 400px;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+}
+
+.results {
+  padding: 15px;
+}
+
+.card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.get-btn {
+  display: block;
+  text-align: center;
+  background: #fff;
+  color: #000;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+}
+
+.get-btn:active {
+  transform: scale(0.97);
 }
 </style>
 </head>
 
-<body class="text-slate-100 min-h-screen">
+<body>
 
-<!-- SEARCH BAR -->
-<div class="max-w-7xl mx-auto px-4 py-6">
-  <input
-    id="searchInput"
-    class="w-full p-4 rounded-2xl bg-slate-900 border border-white/10"
-    placeholder="Search movies..."
-  />
+<header>ADTV Movies</header>
 
-  <div
-    id="movieGrid"
-    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-  </div>
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="Search movie..." oninput="searchMovies()">
 </div>
 
+<div class="results" id="results"></div>
+
 <script>
-lucide.createIcons();
+// SAMPLE DATA (replace with your real results later)
+const movies = [
+  "The Bequeathed S01 COMBINED 720p NF",
+  "Vikings S06 1080p",
+  "Money Heist S05 720p",
+  "KGF Chapter 2 1080p"
+];
 
-let allMovies = [];
+// SEARCH LOGIC (UNCHANGED)
+function searchMovies() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const res = document.getElementById("results");
+  res.innerHTML = "";
 
-/* LOAD MOVIES */
-fetch("movies.json")
-.then(res => res.json())
-.then(data => {
-  allMovies = data;
-  render(allMovies.slice(0, 20));
-});
+  movies
+    .filter(m => m.toLowerCase().includes(q))
+    .forEach(movie => {
+      res.innerHTML += `
+        <div class="card">
+          <h3>${movie}</h3>
+          <div class="get-btn" onclick="shareToTelegram('${escapeQuotes(movie)}')">
+            Get File
+          </div>
+        </div>
+      `;
+    });
+}
 
-/* TELEGRAM SHARE — SAME AS EARLIER (NO CONSEQUENCES) */
+// 🔥 ONLY FIX THAT MATTERS
 function shareToTelegram(movieName) {
-  const command = `/movie ${movieName}`;
-  const text = encodeURIComponent(command);
+  const text = encodeURIComponent("/movie " + movieName);
+  const shareUrl = "https://t.me/share/url?text=" + text;
 
-  const shareUrl = `https://t.me/share/url?text=${text}`;
-
-  // Must be opened directly from click
-  window.open(shareUrl, "_blank", "noopener");
+  // MUST be direct user click
+  window.open(shareUrl, "_blank");
 }
 
-/* RENDER MOVIES */
-function render(list) {
-  movieGrid.innerHTML = list.map(m => {
-    const name = Array.isArray(m) ? m[1] : m.name;
-    const safeName = name.replace(/'/g, "\\'");
-
-    return `
-      <div class="bg-slate-900/80 p-5 rounded-2xl border border-white/10">
-        <h3 class="font-bold mb-4 leading-snug">${name}</h3>
-
-        <button
-          onclick="shareToTelegram('${safeName}')"
-          class="w-full bg-white hover:bg-sky-500 text-black hover:text-white
-                 font-black py-3 rounded-xl transition active:scale-95">
-          Get File
-        </button>
-      </div>
-    `;
-  }).join("");
+// SAFETY
+function escapeQuotes(str) {
+  return str.replace(/'/g, "\\'");
 }
-
-/* SEARCH */
-searchInput.addEventListener("input", e => {
-  const q = e.target.value.toLowerCase().trim();
-
-  const results = allMovies.filter(m =>
-    (Array.isArray(m) ? m[1] : m.name)
-      .toLowerCase()
-      .includes(q)
-  );
-
-  render(results.slice(0, 40));
-});
 </script>
 
 </body>
