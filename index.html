@@ -77,10 +77,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background:#020617; }
 /* ===============================
    CONFIG
 ================================ */
-const GROUP_URL = "https://t.me/adtvmovies";
-
-/* 🔥 FIXED: TEXT ONLY (NO URL) */
-const SHARE_URL = "https://telegram.me/share/url?text=";
+const SHARE_URL = "https://t.me/share/url?text=";
 
 /* ===============================
    JOIN CHECK LOGIC
@@ -101,7 +98,9 @@ function handleGetFile(movieName) {
     }
 
     const cmd = encodeURIComponent(`/movie ${movieName}`);
-    window.open(SHARE_URL + cmd, "_blank");
+
+    // 🔥 FIX: use location.href (Telegram accepts text)
+    location.href = SHARE_URL + cmd;
 }
 
 /* ===============================
