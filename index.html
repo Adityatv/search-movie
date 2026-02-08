@@ -8,114 +8,12 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
-body {
-  font-family: 'Inter', sans-serif;
-  background:#020617;
-}
-
-/* ===== POPUP ===== */
-.overlay {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-
-.popup {
-  background:#0f172a;
-  padding:24px;
-  border-radius:18px;
-  width:92%;
-  max-width:420px;
-  animation:zoom .35s ease;
-}
-
-@keyframes zoom {
-  from {transform:scale(.85);opacity:0}
-  to {transform:scale(1);opacity:1}
-}
-
-.popup h2 {
-  text-align:center;
-  font-size:22px;
-  font-weight:800;
-  margin-bottom:10px;
-}
-
-.popup li {
-  color:#cbd5f5;
-  font-size:14px;
-  margin-bottom:6px;
-}
-
-.btn {
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  font-weight:700;
-  margin-top:12px;
-}
-
-.btn-main {
-  background:#0ea5e9;
-  color:#fff;
-}
-
-.btn-sec {
-  background:#1e293b;
-  color:#e5e7eb;
-}
+body { background:#020617; font-family:Inter,sans-serif; }
 </style>
 </head>
 
 <body class="text-slate-100">
 
-<!-- ===== POPUP 1 ===== -->
-<div class="overlay" id="joinPopup">
-  <div class="popup">
-    <h2>Join Required</h2>
-    <p class="text-slate-400 text-sm text-center mb-3">
-      Please join our Telegram movie group
-    </p>
-
-    <button class="btn btn-main" onclick="joinTG()">Join @adtvmovies</button>
-    <button class="btn btn-sec" onclick="skipJoin()">Already Joined</button>
-  </div>
-</div>
-
-<!-- ===== POPUP 2 ===== -->
-<div class="overlay hidden" id="howPopup">
-  <div class="popup">
-    <h2>How to use</h2>
-    <ul>
-      <li>1. First join Telegram group</li>
-      <li>2. Search movie on website</li>
-      <li>3. Click on <b>Get File</b></li>
-      <li>4. Telegram share opens</li>
-      <li>5. Share code in movie group</li>
-    </ul>
-    <p class="text-green-400 font-bold mt-2 text-center">
-      You will get results ✅
-    </p>
-
-    <button id="closeHow" class="btn btn-sec hidden" onclick="closeHow()">
-      Close
-    </button>
-  </div>
-</div>
-
-<!-- ===== NAVBAR ===== -->
-<nav class="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
-  <div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
-    <i data-lucide="film" class="text-sky-400"></i>
-    <span class="font-black text-lg">CRIXZY MOVIES</span>
-  </div>
-</nav>
-
-<!-- ===== SEARCH ===== -->
 <main class="max-w-7xl mx-auto px-4 py-6">
   <input id="searchInput"
     class="w-full p-4 rounded-xl bg-slate-900 border border-white/10"
@@ -129,55 +27,49 @@ body {
 <script>
 lucide.createIcons();
 
-/* ===== POPUP LOGIC ===== */
-function joinTG(){
-  window.open("https://t.me/adtvmovies","_blank");
-  document.getElementById("joinPopup").classList.add("hidden");
-  document.getElementById("howPopup").classList.remove("hidden");
-
-  setTimeout(()=>{
-    document.getElementById("closeHow").classList.remove("hidden");
-  },5000);
-}
-
-function skipJoin(){
-  document.getElementById("joinPopup").classList.add("hidden");
-}
-
-function closeHow(){
-  document.getElementById("howPopup").classList.add("hidden");
-}
-
-/* ===== MOVIE LOGIC ===== */
 let allMovies = [];
 
 fetch("movies.json")
 .then(r=>r.json())
 .then(d=>{
-  allMovies=d;
+  allMovies = d;
   render(allMovies.slice(0,20));
 });
 
+function openTelegram(message){
+  const text = encodeURIComponent(message);
+
+  const tgApp = `tg://msg?text=${text}`;
+  const tgWeb = `https://t.me/share/url?text=${text}`;
+
+  // Try Telegram app first
+  window.location.href = tgApp;
+
+  // Fallback to web after short delay
+  setTimeout(() => {
+    window.open(tgWeb, "_blank");
+  }, 600);
+}
+
 function render(list){
-  movieGrid.innerHTML=list.map(m=>{
+  movieGrid.innerHTML = list.map(m=>{
     const name = Array.isArray(m)?m[1]:m.name;
-    const text = encodeURIComponent(`/movie ${name}`);
-    const tg = `https://t.me/share/url?text=${text}`;
 
     return `
     <div class="bg-slate-900 p-5 rounded-2xl border border-white/10">
       <h3 class="font-bold mb-4">${name}</h3>
-      <a href="${tg}" target="_blank"
-        class="block text-center bg-white text-black font-black py-3 rounded-xl">
+      <button
+        onclick="openTelegram('/movie ${name}')"
+        class="w-full bg-white text-black font-black py-3 rounded-xl active:scale-95">
         Get File
-      </a>
+      </button>
     </div>`;
   }).join("");
 }
 
-searchInput.oninput=e=>{
-  const q=e.target.value.toLowerCase();
-  const res=allMovies.filter(m=>
+searchInput.oninput = e => {
+  const q = e.target.value.toLowerCase();
+  const res = allMovies.filter(m =>
     (Array.isArray(m)?m[1]:m.name).toLowerCase().includes(q)
   );
   render(res.slice(0,40));
