@@ -2,24 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CRIXZY MOVIES</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRIXZY MOVIES</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
 body {
   background:#020617;
-  font-family: Inter, Arial, sans-serif;
+  font-family: Inter, system-ui, sans-serif;
 }
 </style>
 </head>
 
-<body class="text-slate-100">
+<body class="text-slate-100 min-h-screen">
 
-<main class="max-w-7xl mx-auto px-4 py-6">
+<!-- SEARCH BAR -->
+<div class="max-w-7xl mx-auto px-4 py-6">
   <input
     id="searchInput"
-    class="w-full p-4 rounded-xl bg-slate-900 border border-white/10"
+    class="w-full p-4 rounded-2xl bg-slate-900 border border-white/10"
     placeholder="Search movies..."
   />
 
@@ -27,12 +30,14 @@ body {
     id="movieGrid"
     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
   </div>
-</main>
+</div>
 
 <script>
+lucide.createIcons();
+
 let allMovies = [];
 
-/* ===== LOAD MOVIES ===== */
+/* LOAD MOVIES */
 fetch("movies.json")
 .then(res => res.json())
 .then(data => {
@@ -40,34 +45,31 @@ fetch("movies.json")
   render(allMovies.slice(0, 20));
 });
 
-/* ===== TELEGRAM SHARE (FIXED) ===== */
-function openTelegramShare(movieName) {
-  const message = `/movie ${movieName}`;
-  const text = encodeURIComponent(message);
+/* TELEGRAM SHARE — SAME AS EARLIER (NO CONSEQUENCES) */
+function shareToTelegram(movieName) {
+  const command = `/movie ${movieName}`;
+  const text = encodeURIComponent(command);
 
-  const tgApp = `tg://share?text=${text}`;
-  const tgWeb = `https://t.me/share/url?text=${text}`;
+  const shareUrl = `https://t.me/share/url?text=${text}`;
 
-  // Try Telegram app
-  window.location.href = tgApp;
-
-  // Fallback to web
-  setTimeout(() => {
-    window.open(tgWeb, "_blank");
-  }, 500);
+  // Must be opened directly from click
+  window.open(shareUrl, "_blank", "noopener");
 }
 
-/* ===== RENDER ===== */
+/* RENDER MOVIES */
 function render(list) {
   movieGrid.innerHTML = list.map(m => {
     const name = Array.isArray(m) ? m[1] : m.name;
+    const safeName = name.replace(/'/g, "\\'");
 
     return `
-      <div class="bg-slate-900 p-5 rounded-2xl border border-white/10">
-        <h3 class="font-bold mb-4">${name}</h3>
+      <div class="bg-slate-900/80 p-5 rounded-2xl border border-white/10">
+        <h3 class="font-bold mb-4 leading-snug">${name}</h3>
+
         <button
-          onclick="openTelegramShare('${name.replace(/'/g, "\\'")}')"
-          class="w-full bg-white text-black font-black py-3 rounded-xl active:scale-95">
+          onclick="shareToTelegram('${safeName}')"
+          class="w-full bg-white hover:bg-sky-500 text-black hover:text-white
+                 font-black py-3 rounded-xl transition active:scale-95">
           Get File
         </button>
       </div>
@@ -75,14 +77,16 @@ function render(list) {
   }).join("");
 }
 
-/* ===== SEARCH ===== */
+/* SEARCH */
 searchInput.addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
+  const q = e.target.value.toLowerCase().trim();
+
   const results = allMovies.filter(m =>
     (Array.isArray(m) ? m[1] : m.name)
       .toLowerCase()
       .includes(q)
   );
+
   render(results.slice(0, 40));
 });
 </script>
