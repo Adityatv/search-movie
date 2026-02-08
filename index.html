@@ -10,20 +10,10 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
-body { font-family: 'Plus Jakarta Sans', sans-serif; background:#020617; }
-
-.movie-card {
-    transition:.3s;
-    display:flex;
-    flex-direction:column;
-}
-.movie-card:hover {
-    transform:translateY(-6px);
-}
-.glass {
-    background:rgba(15,23,42,.8);
-    backdrop-filter:blur(16px);
-}
+body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
+.movie-card{transition:.3s;display:flex;flex-direction:column}
+.movie-card:hover{transform:translateY(-6px)}
+.glass{background:rgba(15,23,42,.8);backdrop-filter:blur(16px)}
 </style>
 </head>
 
@@ -31,130 +21,120 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background:#020617; }
 
 <!-- JOIN POPUP -->
 <div id="joinPopup" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center">
-    <div class="bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center">
-        <h2 class="text-2xl font-black mb-3">Join Our Telegram</h2>
-        <p class="text-slate-400 mb-6">
-            You must join <b>@adtvmovies</b> to get files.
-        </p>
+  <div class="bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center">
+    <h2 class="text-2xl font-black mb-3">Join Required</h2>
+    <p class="text-slate-400 mb-6">
+      Join <b>@adtvmovies</b> to search movies
+    </p>
 
-        <a href="https://t.me/adtvmovies" target="_blank"
-           class="block w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-bold mb-4">
-            Join @adtvmovies
-        </a>
+    <a href="https://t.me/adtvmovies" target="_blank"
+       class="block w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-bold mb-4">
+      Join @adtvmovies
+    </a>
 
-        <button onclick="confirmJoined()"
-                class="text-sm text-slate-400 hover:text-white">
-            I have joined ✔
-        </button>
-    </div>
+    <button onclick="markJoined()"
+      class="text-sm text-slate-400 hover:text-white">
+      I have joined ✔
+    </button>
+  </div>
 </div>
 
-<!-- NAV -->
 <nav class="sticky top-0 z-40 glass border-b border-white/5">
-    <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="location.reload()">
-            <div class="bg-sky-500 p-2 rounded-2xl">
-                <i data-lucide="film" class="w-6 h-6 text-white"></i>
-            </div>
-            <span class="font-extrabold text-xl uppercase hidden md:block">
-                Crixzy<span class="text-sky-500">Movies</span>
-            </span>
-        </div>
-
-        <input id="searchInput" type="text"
-               class="w-full max-w-xl px-5 py-3 bg-slate-900 border border-white/10 rounded-2xl"
-               placeholder="Search titles immediately...">
+  <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-2 cursor-pointer" onclick="location.reload()">
+      <div class="bg-sky-500 p-2 rounded-2xl">
+        <i data-lucide="film" class="w-6 h-6 text-white"></i>
+      </div>
+      <span class="font-extrabold text-xl uppercase hidden md:block">
+        Crixzy<span class="text-sky-500">Movies</span>
+      </span>
     </div>
+
+    <input id="searchInput"
+      type="text"
+      class="w-full max-w-xl px-5 py-3 bg-slate-900 border border-white/10 rounded-2xl"
+      placeholder="Search titles immediately...">
+  </div>
 </nav>
 
-<!-- MOVIES -->
 <main class="max-w-7xl mx-auto px-4 py-10">
-    <div id="movieGrid"
-         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+  <div id="movieGrid"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  </div>
 </main>
 
 <script>
-/* ===============================
-   CONFIG
-================================ */
-const GROUP_URL = "https://t.me/adtvmovies";
-const SHARE_URL = "https://t.me/share/url?url=https://t.me/adtvmovies&text=";
+/* ================= CONFIG ================= */
+const SHARE_BASE =
+  "https://t.me/share/url?url=https://t.me/adtvmovies&text=";
 
-/* ===============================
-   JOIN CHECK LOGIC
-================================ */
-function isJoined() {
-    return localStorage.getItem("joined_adtvmovies") === "yes";
+/* =============== JOIN LOGIC =============== */
+function hasJoined(){
+  return localStorage.getItem("joined_adtvmovies")==="yes";
+}
+function markJoined(){
+  localStorage.setItem("joined_adtvmovies","yes");
+  document.getElementById("joinPopup").classList.add("hidden");
 }
 
-function confirmJoined() {
-    localStorage.setItem("joined_adtvmovies", "yes");
-    document.getElementById("joinPopup").classList.add("hidden");
+/* ============ MAIN CLICK HANDLER =========== */
+function getFile(movieName){
+  if(!hasJoined()){
+    document.getElementById("joinPopup").classList.remove("hidden");
+    return;
+  }
+  const cmd = encodeURIComponent("/movie " + movieName);
+  window.open(SHARE_BASE + cmd, "_blank");
 }
 
-function handleGetFile(movieName) {
-    if (!isJoined()) {
-        document.getElementById("joinPopup").classList.remove("hidden");
-        return;
-    }
-    const cmd = encodeURIComponent(`/movie ${movieName}`);
-    window.open(SHARE_URL + cmd, "_blank");
+/* ================ APP ===================== */
+let allMovies=[];
+const grid=document.getElementById("movieGrid");
+const search=document.getElementById("searchInput");
+
+function formatBytes(b){
+  if(!b) return "Unknown";
+  const s=["B","KB","MB","GB"];
+  let i=Math.floor(Math.log(b)/Math.log(1024));
+  return (b/Math.pow(1024,i)).toFixed(2)+" "+s[i];
 }
 
-/* ===============================
-   APP LOGIC
-================================ */
-let allMovies = [];
-const grid = document.getElementById("movieGrid");
-const search = document.getElementById("searchInput");
-
-function formatBytes(b) {
-    if (!b) return "Unknown";
-    const s=["B","KB","MB","GB"];
-    let i=Math.floor(Math.log(b)/Math.log(1024));
-    return (b/Math.pow(1024,i)).toFixed(2)+" "+s[i];
+function createCard(m){
+  const name=m[1];
+  const size=m[2];
+  const safe=name.replace(/'/g,"\\'");
+  return `
+  <div class="movie-card bg-slate-900/60 border border-white/10 rounded-[2.5rem] p-6">
+    <h3 class="font-bold text-lg mb-6">${name}</h3>
+    <div class="mt-auto space-y-4">
+      <div class="flex justify-between bg-white/5 px-4 py-2 rounded-xl text-xs">
+        <span>Size</span><span>${formatBytes(size)}</span>
+      </div>
+      <button onclick="getFile('${safe}')"
+        class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black transition-all">
+        Get File
+      </button>
+    </div>
+  </div>`;
 }
 
-function createCard(m) {
-    const name = m[1];
-    const size = m[2];
-
-    return `
-    <div class="movie-card bg-slate-900/60 border border-white/10 rounded-[2.5rem] p-6">
-        <h3 class="font-bold text-lg mb-6">${name}</h3>
-
-        <div class="mt-auto space-y-4">
-            <div class="flex justify-between bg-white/5 px-4 py-2 rounded-xl text-xs">
-                <span>Size</span>
-                <span>${formatBytes(size)}</span>
-            </div>
-
-            <button onclick="handleGetFile('${name.replace(/'/g,"\\'")}')"
-                class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black transition-all">
-                Get File
-            </button>
-        </div>
-    </div>`;
+function render(list){
+  grid.innerHTML=list.map(createCard).join("");
+  lucide.createIcons();
 }
 
-function render(list) {
-    grid.innerHTML = list.map(createCard).join("");
-    lucide.createIcons();
+async function init(){
+  const r=await fetch("movies.json");
+  allMovies=await r.json();
+  render(allMovies.slice(0,40));
 }
 
-async function init() {
-    const res = await fetch("movies.json");
-    allMovies = await res.json();
-    render(allMovies.slice(0,40));
-}
-
-search.addEventListener("input", e => {
-    const q = e.target.value.toLowerCase();
-    render(allMovies.filter(m => m[1].toLowerCase().includes(q)).slice(0,50));
+search.addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  render(allMovies.filter(m=>m[1].toLowerCase().includes(q)).slice(0,50));
 });
 
 init();
 </script>
-
 </body>
 </html>
