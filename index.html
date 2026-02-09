@@ -10,28 +10,60 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
-body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#020617}
 
 .movie-card{transition:.3s;display:flex;flex-direction:column}
 .movie-card:hover{transform:translateY(-6px)}
 .glass{background:rgba(15,23,42,.8);backdrop-filter:blur(16px)}
+
+/* HOW TO USE ANIMATION – WEBVIEW SAFE */
+.step{
+  padding:10px 14px;
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  animation:stepGlow 10s infinite;
+  opacity:.4;
+}
+.step:nth-child(1){animation-delay:0s}
+.step:nth-child(2){animation-delay:2s}
+.step:nth-child(3){animation-delay:4s}
+.step:nth-child(4){animation-delay:6s}
+.step:nth-child(5){animation-delay:8s}
+
+@keyframes stepGlow{
+  0%{opacity:.4;transform:scale(1)}
+  5%{
+    opacity:1;
+    transform:scale(1.04);
+    box-shadow:0 0 0 2px rgba(56,189,248,.6),
+               0 0 20px rgba(56,189,248,.4)
+  }
+  20%{
+    opacity:.4;
+    transform:scale(1)
+  }
+  100%{opacity:.4}
+}
 </style>
 </head>
 
 <body class="text-slate-100 min-h-screen">
 
-<!-- HOW TO USE POPUP (UI ONLY) -->
-<div id="howPopup" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+<!-- HOW TO USE POPUP -->
+<div id="howPopup" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center">
   <div class="bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-white/10">
-    <h2 class="text-2xl font-black mb-4 text-center">How to Use</h2>
-    <ol class="space-y-2 text-slate-300 text-sm">
-      <li class="animate-pulse">1️⃣ Join <b>@adtvmovies</b></li>
-      <li>2️⃣ Search movie</li>
-      <li>3️⃣ Click <b>Get File</b></li>
-      <li>4️⃣ Telegram opens (command copied in your clipboard)</li>
-      <li>5️⃣ Paste command in group</li>
-      <li class="text-sky-400 font-bold">✅ You will get results</li>
-    </ol>
+    <h2 class="text-2xl font-black mb-5 text-center">How to Use</h2>
+
+    <div class="space-y-3 text-sm text-slate-300">
+      <div class="step">1️⃣ Join <b>@adtvmovies</b></div>
+      <div class="step">2️⃣ Search movie on website</div>
+      <div class="step">3️⃣ Click <b>Get File</b></div>
+      <div class="step">4️⃣ Telegram will open (command copied in your clipboard)</div>
+      <div class="step">5️⃣ Paste command in group</div>
+      <div class="text-sky-400 font-bold text-center mt-3">
+        ✅ You will get results
+      </div>
+    </div>
 
     <button id="howClose"
       class="hidden mt-6 w-full bg-sky-500 hover:bg-sky-600 text-white py-3 rounded-2xl font-bold">
@@ -40,7 +72,7 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
   </div>
 </div>
 
-<!-- JOIN POPUP (UNCHANGED LOGIC) -->
+<!-- JOIN POPUP (UNCHANGED) -->
 <div id="joinPopup" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center">
   <div class="bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center">
     <h2 class="text-2xl font-black mb-3">Join Our Telegram</h2>
@@ -82,7 +114,7 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
 </main>
 
 <script>
-/* HOW TO USE POPUP TIMER (UI ONLY) */
+/* HOW POPUP TIMER – UNCHANGED */
 setTimeout(()=>{
   document.getElementById("howClose").classList.remove("hidden");
 },5000);
@@ -90,30 +122,26 @@ document.getElementById("howClose").onclick=()=>{
   document.getElementById("howPopup").classList.add("hidden");
 };
 
-/* JOIN LOGIC — UNCHANGED */
-function isJoined(){
-  return localStorage.getItem("joined_adtvmovies")==="yes";
-}
+/* JOIN LOGIC – UNCHANGED */
+function isJoined(){return localStorage.getItem("joined_adtvmovies")==="yes"}
 function confirmJoined(){
   localStorage.setItem("joined_adtvmovies","yes");
   document.getElementById("joinPopup").classList.add("hidden");
 }
 
-/* ✅ GET FILE — FIXED BACK TO EARLIER WORKING LOGIC */
+/* GET FILE – UNCHANGED */
 function handleGetFile(movieName){
   if(!isJoined()){
     document.getElementById("joinPopup").classList.remove("hidden");
     return;
   }
-
-  const command = `/movie ${movieName}`;
-
-  navigator.clipboard.writeText(command).then(()=>{
+  const cmd=`/movie ${movieName}`;
+  navigator.clipboard.writeText(cmd).then(()=>{
     window.open("https://t.me/adtvmovies","_blank");
   });
 }
 
-/* APP */
+/* APP – UNCHANGED */
 let allMovies=[];
 const grid=document.getElementById("movieGrid");
 const search=document.getElementById("searchInput");
