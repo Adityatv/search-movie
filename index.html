@@ -20,6 +20,27 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
 
 <body class="text-slate-100 min-h-screen">
 
+<!-- HOW TO USE POPUP -->
+<div id="howPopup" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+  <div class="bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-white/10 text-left relative">
+    <h2 class="text-2xl font-black mb-4 text-center">How to Use</h2>
+
+    <ol class="space-y-2 text-slate-300 text-sm">
+      <li>1️⃣ First join <b>@adtvmovies</b></li>
+      <li>2️⃣ Search movie on website</li>
+      <li>3️⃣ Click on <b>Get File</b></li>
+      <li>4️⃣ Telegram will open</li>
+      <li>5️⃣ Paste command in group</li>
+      <li class="text-sky-400 font-bold">✅ You will get results</li>
+    </ol>
+
+    <button id="howClose"
+      class="hidden mt-6 w-full bg-sky-500 hover:bg-sky-600 text-white py-3 rounded-2xl font-bold">
+      Got it, Continue
+    </button>
+  </div>
+</div>
+
 <!-- JOIN POPUP -->
 <div id="joinPopup" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center">
   <div class="bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center">
@@ -62,6 +83,15 @@ body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
 </main>
 
 <script>
+/* HOW POPUP TIMER */
+setTimeout(()=>{
+  document.getElementById("howClose").classList.remove("hidden");
+},5000);
+
+document.getElementById("howClose").onclick=()=>{
+  document.getElementById("howPopup").classList.add("hidden");
+};
+
 /* JOIN CHECK */
 function isJoined(){
   return localStorage.getItem("joined_adtvmovies")==="yes";
@@ -71,7 +101,7 @@ function confirmJoined(){
   document.getElementById("joinPopup").classList.add("hidden");
 }
 
-/* 🔥 FINAL FIX */
+/* GET FILE – UNCHANGED LOGIC */
 function handleGetFile(movieName){
   if(!isJoined()){
     document.getElementById("joinPopup").classList.remove("hidden");
@@ -79,13 +109,9 @@ function handleGetFile(movieName){
   }
 
   const cmd = `/movie ${movieName}`;
-
-  // 1️⃣ Copy command
   navigator.clipboard.writeText(cmd).then(()=>{
-    // 2️⃣ Open Telegram group
     window.open("https://t.me/adtvmovies","_blank");
-    // 3️⃣ Tell user
-    alert("Command copied! Paste it in Telegram group to get result.");
+    alert("Command copied! Paste it in Telegram group.");
   });
 }
 
