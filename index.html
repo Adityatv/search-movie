@@ -10,157 +10,194 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
-body { font-family:'Plus Jakarta Sans',sans-serif; background:#020617; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background:#020617;
+}
 
-.movie-card{transition:.3s;display:flex;flex-direction:column}
-.movie-card:hover{transform:translateY(-6px)}
-.glass{background:rgba(15,23,42,.8);backdrop-filter:blur(16px)}
+/* glass */
+.glass {
+    background:rgba(15,23,42,.8);
+    backdrop-filter:blur(16px);
+}
+
+/* popup blur */
+.blur-bg {
+    backdrop-filter: blur(10px);
+}
+
+/* animated step highlight */
+.step {
+    transition: all .4s ease;
+}
+.step.active {
+    background: linear-gradient(90deg,#0ea5e9,#38bdf8);
+    color:#020617;
+    box-shadow: 0 0 25px rgba(56,189,248,.7);
+    transform: scale(1.03);
+}
+
+/* pulse */
+@keyframes pulse {
+    0% { box-shadow:0 0 0 rgba(56,189,248,.6); }
+    50% { box-shadow:0 0 25px rgba(56,189,248,1); }
+    100% { box-shadow:0 0 0 rgba(56,189,248,.6); }
+}
+.step.active {
+    animation: pulse 1.2s infinite;
+}
 </style>
 </head>
 
 <body class="text-slate-100 min-h-screen">
 
-<!-- HOW TO USE POPUP -->
-<div id="howPopup" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
-  <div class="bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-white/10 text-left relative">
-    <h2 class="text-2xl font-black mb-4 text-center">How to Use</h2>
+<!-- JOIN POPUP -->
+<div id="joinPopup" class="fixed inset-0 bg-black/70 blur-bg hidden z-50 flex items-center justify-center">
+    <div class="bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center">
+        <h2 class="text-2xl font-black mb-3">Join Our Telegram</h2>
+        <p class="text-slate-400 mb-6">
+            You must join <b>@adtvmovies</b> to get files.
+        </p>
 
-    <ol class="space-y-2 text-slate-300 text-sm">
-      <li>1️⃣ First join <b>@adtvmovies</b></li>
-      <li>2️⃣ Search movie on website</li>
-      <li>3️⃣ Click on <b>Get File</b></li>
-      <li>4️⃣ Telegram will open</li>
-      <li>5️⃣ Paste command in group</li>
-      <li class="text-sky-400 font-bold">✅ You will get results</li>
-    </ol>
+        <a href="https://t.me/adtvmovies" target="_blank"
+           class="block w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-bold mb-4">
+            Join @adtvmovies
+        </a>
 
-    <button id="howClose"
-      class="hidden mt-6 w-full bg-sky-500 hover:bg-sky-600 text-white py-3 rounded-2xl font-bold">
-      Got it, Continue
-    </button>
-  </div>
+        <button onclick="confirmJoined()"
+                class="text-sm text-slate-400 hover:text-white">
+            I have joined ✔
+        </button>
+    </div>
 </div>
 
-<!-- JOIN POPUP -->
-<div id="joinPopup" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center">
-  <div class="bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center">
-    <h2 class="text-2xl font-black mb-3">Join Our Telegram</h2>
-    <p class="text-slate-400 mb-6">You must join <b>@adtvmovies</b> to get files.</p>
+<!-- HOW TO USE POPUP -->
+<div id="howPopup" class="fixed inset-0 bg-black/70 blur-bg z-40 flex items-center justify-center">
+    <div class="bg-slate-900 rounded-[2.5rem] p-8 max-w-md w-full border border-white/10">
+        <h2 class="text-2xl font-black mb-6 text-center">How to Use</h2>
 
-    <a href="https://t.me/adtvmovies" target="_blank"
-       class="block w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-bold mb-4">
-      Join @adtvmovies
-    </a>
+        <div id="steps" class="space-y-3">
+            <div class="step px-5 py-4 rounded-2xl bg-white/5">1. First join Telegram group</div>
+            <div class="step px-5 py-4 rounded-2xl bg-white/5">2. Search movie here</div>
+            <div class="step px-5 py-4 rounded-2xl bg-white/5">3. Click on <b>Get File</b></div>
+            <div class="step px-5 py-4 rounded-2xl bg-white/5">4. Share code on Telegram</div>
+            <div class="step px-5 py-4 rounded-2xl bg-white/5 font-bold">5. You will get results</div>
+        </div>
 
-    <button onclick="confirmJoined()" class="text-sm text-slate-400 hover:text-white">
-      I have joined ✔
-    </button>
-  </div>
+        <button id="closeHow"
+                class="hidden mt-6 w-full bg-slate-100 text-slate-900 py-3 rounded-2xl font-black">
+            Close
+        </button>
+    </div>
 </div>
 
 <!-- NAV -->
-<nav class="sticky top-0 z-40 glass border-b border-white/5">
-  <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-    <div class="flex items-center gap-2 cursor-pointer" onclick="location.reload()">
-      <div class="bg-sky-500 p-2 rounded-2xl">
-        <i data-lucide="film" class="w-6 h-6 text-white"></i>
-      </div>
-      <span class="font-extrabold text-xl uppercase hidden md:block">
-        ADTV<span class="text-sky-500">Movies</span>
-      </span>
-    </div>
+<nav class="sticky top-0 z-30 glass border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="location.reload()">
+            <div class="bg-sky-500 p-2 rounded-2xl">
+                <i data-lucide="film" class="w-6 h-6 text-white"></i>
+            </div>
+            <span class="font-extrabold text-xl uppercase hidden md:block">
+                ADTV<span class="text-sky-500">Movies</span>
+            </span>
+        </div>
 
-    <input id="searchInput" type="text"
-      class="w-full max-w-xl px-5 py-3 bg-slate-900 border border-white/10 rounded-2xl"
-      placeholder="Search titles immediately...">
-  </div>
+        <input id="searchInput" type="text"
+               class="w-full max-w-xl px-5 py-3 bg-slate-900 border border-white/10 rounded-2xl"
+               placeholder="Search titles immediately...">
+    </div>
 </nav>
 
 <!-- MOVIES -->
 <main class="max-w-7xl mx-auto px-4 py-10">
-  <div id="movieGrid"
-    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    <div id="movieGrid"
+         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
 </main>
 
 <script>
-/* HOW POPUP TIMER */
-setTimeout(()=>{
-  document.getElementById("howClose").classList.remove("hidden");
-},5000);
+/* CONFIG */
+const SHARE_URL = "https://t.me/share/url?text=";
 
-document.getElementById("howClose").onclick=()=>{
-  document.getElementById("howPopup").classList.add("hidden");
+/* JOIN LOGIC */
+function isJoined() {
+    return localStorage.getItem("joined_adtvmovies") === "yes";
+}
+function confirmJoined() {
+    localStorage.setItem("joined_adtvmovies", "yes");
+    document.getElementById("joinPopup").classList.add("hidden");
+}
+function handleGetFile(movieName) {
+    if (!isJoined()) {
+        document.getElementById("joinPopup").classList.remove("hidden");
+        return;
+    }
+    window.open(SHARE_URL + encodeURIComponent(`/movie ${movieName}`), "_blank");
+}
+
+/* HOW TO USE ANIMATION */
+const steps = document.querySelectorAll(".step");
+let idx = 0;
+setInterval(() => {
+    steps.forEach(s => s.classList.remove("active"));
+    steps[idx].classList.add("active");
+    idx = (idx + 1) % steps.length;
+}, 1200);
+
+setTimeout(() => {
+    document.getElementById("closeHow").classList.remove("hidden");
+}, 5000);
+
+document.getElementById("closeHow").onclick = () => {
+    document.getElementById("howPopup").classList.add("hidden");
 };
 
-/* JOIN CHECK */
-function isJoined(){
-  return localStorage.getItem("joined_adtvmovies")==="yes";
-}
-function confirmJoined(){
-  localStorage.setItem("joined_adtvmovies","yes");
-  document.getElementById("joinPopup").classList.add("hidden");
-}
+/* MOVIE APP */
+let allMovies = [];
+const grid = document.getElementById("movieGrid");
+const search = document.getElementById("searchInput");
 
-/* GET FILE – UNCHANGED LOGIC */
-function handleGetFile(movieName){
-  if(!isJoined()){
-    document.getElementById("joinPopup").classList.remove("hidden");
-    return;
-  }
-
-  const cmd = `/movie ${movieName}`;
-  navigator.clipboard.writeText(cmd).then(()=>{
-    window.open("https://t.me/adtvmovies","_blank");
-    alert("Command copied! Paste it in Telegram group.");
-  });
+function formatBytes(b) {
+    if (!b) return "Unknown";
+    const s=["B","KB","MB","GB"];
+    let i=Math.floor(Math.log(b)/Math.log(1024));
+    return (b/Math.pow(1024,i)).toFixed(2)+" "+s[i];
 }
 
-/* APP */
-let allMovies=[];
-const grid=document.getElementById("movieGrid");
-const search=document.getElementById("searchInput");
-
-function formatBytes(b){
-  if(!b)return"Unknown";
-  const s=["B","KB","MB","GB"];
-  let i=Math.floor(Math.log(b)/Math.log(1024));
-  return(b/Math.pow(1024,i)).toFixed(2)+" "+s[i];
+function createCard(m) {
+    const name = m[1];
+    const size = m[2];
+    return `
+    <div class="bg-slate-900/60 border border-white/10 rounded-[2.5rem] p-6 flex flex-col">
+        <h3 class="font-bold text-lg mb-6">${name}</h3>
+        <div class="mt-auto space-y-4">
+            <div class="flex justify-between bg-white/5 px-4 py-2 rounded-xl text-xs">
+                <span>Size</span>
+                <span>${formatBytes(size)}</span>
+            </div>
+            <button onclick="handleGetFile('${name.replace(/'/g,"\\'")}')"
+                class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black">
+                Get File
+            </button>
+        </div>
+    </div>`;
 }
 
-function createCard(m){
-  const name=m[1], size=m[2];
-  return`
-  <div class="movie-card bg-slate-900/60 border border-white/10 rounded-[2.5rem] p-6">
-    <h3 class="font-bold text-lg mb-6">${name}</h3>
-    <div class="mt-auto space-y-4">
-      <div class="flex justify-between bg-white/5 px-4 py-2 rounded-xl text-xs">
-        <span>Size</span><span>${formatBytes(size)}</span>
-      </div>
-      <button onclick="handleGetFile('${name.replace(/'/g,"\\'")}')"
-        class="w-full bg-slate-100 hover:bg-sky-500 text-slate-950 hover:text-white py-4 rounded-2xl font-black">
-        Get File
-      </button>
-    </div>
-  </div>`;
+async function init() {
+    const res = await fetch("movies.json");
+    allMovies = await res.json();
+    render(allMovies.slice(0,40));
 }
-
-function render(list){
-  grid.innerHTML=list.map(createCard).join("");
-  lucide.createIcons();
+function render(list) {
+    grid.innerHTML = list.map(createCard).join("");
+    lucide.createIcons();
 }
-
-async function init(){
-  const r=await fetch("movies.json");
-  allMovies=await r.json();
-  render(allMovies.slice(0,40));
-}
-
-search.addEventListener("input",e=>{
-  const q=e.target.value.toLowerCase();
-  render(allMovies.filter(m=>m[1].toLowerCase().includes(q)).slice(0,50));
+search.addEventListener("input", e => {
+    const q = e.target.value.toLowerCase();
+    render(allMovies.filter(m => m[1].toLowerCase().includes(q)).slice(0,50));
 });
-
 init();
 </script>
+
 </body>
 </html>
