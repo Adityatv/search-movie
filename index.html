@@ -135,7 +135,7 @@ function handleGetFile(movieName){
     document.getElementById("joinPopup").classList.remove("hidden");
     return;
   }
-  const cmd=`/movie ${movieName}`;
+  const cmd=`${movieName}`;
   navigator.clipboard.writeText(cmd).then(()=>{
     window.open("https://t.me/adtvmovies","_blank");
   });
