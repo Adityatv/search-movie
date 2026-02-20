@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADTV MOVIES - Pro Search</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sky: #38bdf8;
+    --sky-glow: rgba(56,189,248,0.35);
+    --card-bg: rgba(15,23,42,0.85);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #020617;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+
+  /* ── ANIMATED BACKGROUND ── */
+  .bg-scene {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(90px); opacity: 0.12;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 600px; height: 600px; background: #38bdf8; top: -200px; left: -200px; animation-duration: 20s; }
+  .orb-2 { width: 500px; height: 500px; background: #818cf8; bottom: -200px; right: -100px; animation-duration: 25s; animation-delay: -8s; }
+  .orb-3 { width: 350px; height: 350px; background: #34d399; top: 40%; left: 50%; animation-duration: 15s; animation-delay: -5s; }
+
+  @keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(60px, 40px) scale(1.1); }
+  }
+
+  /* ── NOISE OVERLAY ── */
+  .noise {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px;
+  }
+
+  /* ── GLASS ── */
+  .glass {
+    background: rgba(8,16,36,0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ── SEARCH ── */
+  #searchInput {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    color: #f1f5f9;
+    transition: border-color .25s, box-shadow .25s, background .25s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  #searchInput:focus {
+    outline: none;
+    border-color: var(--sky);
+    box-shadow: 0 0 0 3px var(--sky-glow), 0 0 30px var(--sky-glow);
+    background: rgba(56,189,248,0.04);
+  }
+  #searchInput::placeholder { color: rgba(148,163,184,0.5); }
+
+  /* ── MOVIE CARDS ── */
+  .movie-card {
+    position: relative;
+    display: flex; flex-direction: column;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 28px;
+    padding: 28px;
+    transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s;
+    animation: cardIn .4s both;
+    overflow: hidden;
+  }
+  .movie-card::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: 28px;
+    background: linear-gradient(135deg, rgba(56,189,248,0.06), transparent 60%);
+    opacity: 0; transition: opacity .35s;
+  }
+  .movie-card:hover { transform: translateY(-8px) scale(1.01); border-color: rgba(56,189,248,0.4); box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 40px var(--sky-glow); }
+  .movie-card:hover::before { opacity: 1; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ── GET FILE BUTTON ── */
+  .get-btn {
+    position: relative; overflow: hidden;
+    background: #f1f5f9; color: #0f172a;
+    border: none; border-radius: 16px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    padding: 16px; width: 100%;
+    cursor: pointer;
+    transition: color .25s, box-shadow .25s;
+  }
+  .get-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .4s cubic-bezier(.22,1,.36,1);
+    border-radius: inherit;
+  }
+  .get-btn:hover { color: #fff; box-shadow: 0 0 30px var(--sky-glow); }
+  .get-btn:hover::after { transform: scaleX(1); }
+  .get-btn span { position: relative; z-index: 1; }
+
+  /* ── SIZE BADGE ── */
+  .size-badge {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 10px 16px; border-radius: 12px;
+    font-size: 0.78rem; color: #94a3b8;
+  }
+  .size-badge .val { color: var(--sky); font-weight: 600; font-family: 'Syne', sans-serif; }
+
+  /* ── HOW POPUP STEPS ── */
+  .step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.88rem;
+    animation: stepPulse 10s infinite;
+    opacity: 0.4;
+  }
+  .step:nth-child(1){animation-delay:0s}
+  .step:nth-child(2){animation-delay:2s}
+  .step:nth-child(3){animation-delay:4s}
+  .step:nth-child(4){animation-delay:6s}
+  .step:nth-child(5){animation-delay:8s}
+
+  @keyframes stepPulse {
+    0%   { opacity:.4; transform:scale(1); border-color:rgba(255,255,255,0.06); }
+    5%   { opacity:1;  transform:scale(1.03); border-color:rgba(56,189,248,0.6); box-shadow: 0 0 20px var(--sky-glow); }
+    20%  { opacity:.4; transform:scale(1); border-color:rgba(255,255,255,0.06); }
+    100% { opacity:.4; }
+  }
+
+  /* ── POPUP BACKDROP ENTRANCE ── */
+  #howPopup, #joinPopup {
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity:0; } to { opacity:1; }
+  }
+
+  /* ── POPUP CARD ENTRANCE ── */
+  #howPopup > div, #joinPopup > div {
+    animation: popIn .4s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.9) translateY(20px); opacity:0; }
+    to   { transform: none; opacity: 1; }
+  }
+
+  /* ── NAV LOGO ── */
+  .logo-icon {
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    padding: 10px; border-radius: 16px;
+    box-shadow: 0 0 20px var(--sky-glow);
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--sky-glow); }
+    50%       { box-shadow: 0 0 40px var(--sky-glow), 0 0 60px rgba(129,140,248,0.3); }
+  }
+
+  /* ── TITLE GRADIENT ── */
+  .brand-text { background: linear-gradient(135deg, #f1f5f9, #94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .brand-accent { background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+  /* ── CARD TITLE ── */
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    line-height: 1.35;
+    color: #e2e8f0;
+    margin-bottom: 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── STAGGER DELAYS ── */
+  .movie-card:nth-child(1){animation-delay:.05s}
+  .movie-card:nth-child(2){animation-delay:.10s}
+  .movie-card:nth-child(3){animation-delay:.15s}
+  .movie-card:nth-child(4){animation-delay:.20s}
+  .movie-card:nth-child(5){animation-delay:.25s}
+  .movie-card:nth-child(6){animation-delay:.30s}
+  .movie-card:nth-child(7){animation-delay:.35s}
+  .movie-card:nth-child(8){animation-delay:.40s}
+
+  /* ── RIPPLE ── */
+  .ripple {
+    position: absolute; border-radius: 50%;
+    background: rgba(56,189,248,0.3);
+    transform: scale(0);
+    animation: rippleAnim .6s linear forwards;
+    pointer-events: none;
+  }
+  @keyframes rippleAnim {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #020617; }
+  ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.4); border-radius: 10px; }
+
+  /* ── RESULT COUNT ── */
+  #resultCount {
+    font-size: 0.8rem; color: #475569;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: opacity .3s;
+  }
+
+  /* ── JOIN POPUP BTN ── */
+  .join-btn {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    color: #fff; padding: 16px; border-radius: 18px;
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    text-align: center; text-decoration: none;
+    box-shadow: 0 10px 30px var(--sky-glow);
+    transition: transform .25s, box-shadow .25s;
+  }
+  .join-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px var(--sky-glow); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1/-1;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 80px 20px; gap: 16px; color: #334155;
+    animation: cardIn .4s both;
+  }
+  .empty-state svg { opacity: 0.3; }
+</style>
+</head>
+
+<body class="text-slate-100 min-h-screen">
+
+<!-- BG -->
+<div class="bg-scene">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="noise"></div>
+
+<!-- HOW TO USE POPUP -->
+<div id="howPopup" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center">
+  <div class="bg-slate-900/90 rounded-3xl p-8 max-w-md w-full border border-white/10" style="backdrop-filter:blur(30px)">
+    <div class="flex items-center justify-center gap-3 mb-6">
+      <div class="logo-icon"><i data-lucide="film" class="w-5 h-5 text-white"></i></div>
+      <h2 class="text-2xl font-black brand">How to Use</h2>
+    </div>
+
+    <div class="space-y-3 text-sm text-slate-300">
+      <div class="step"><span class="text-lg">1️⃣</span> Join <b class="text-sky-400">@adtvmovies</b> on Telegram</div>
+      <div class="step"><span class="text-lg">2️⃣</span> Search your movie on the website</div>
+      <div class="step"><span class="text-lg">3️⃣</span> Click the <b class="text-sky-400">Get File</b> button</div>
+      <div class="step"><span class="text-lg">4️⃣</span> Telegram opens — command is copied to clipboard</div>
+      <div class="step"><span class="text-lg">5️⃣</span> Paste the command in the group</div>
+    </div>
+
+    <div class="mt-4 text-center text-sky-400 font-bold text-sm tracking-wide">✅ You will get results instantly</div>
+
+    <button id="howClose"
+      class="hidden mt-6 w-full py-4 rounded-2xl font-black text-white relative overflow-hidden"
+      style="background:linear-gradient(135deg,#38bdf8,#818cf8)">
+      <span class="relative z-10">Got it, Let's Go →</span>
+    </button>
+  </div>
+</div>
+
+<!-- JOIN POPUP -->
+<div id="joinPopup" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center">
+  <div class="bg-slate-900/90 rounded-3xl p-8 max-w-sm w-full border border-white/10 text-center" style="backdrop-filter:blur(30px)">
+    <div class="logo-icon inline-flex mb-4"><i data-lucide="send" class="w-6 h-6 text-white"></i></div>
+    <h2 class="text-2xl font-black brand mb-2">Join Our Telegram</h2>
+    <p class="text-slate-400 mb-6 text-sm">You must join <b class="text-sky-400">@adtvmovies</b> to get files.</p>
+
+    <a href="https://t.me/adtvmovies" target="_blank" class="join-btn mb-4">
+      Join @adtvmovies
+    </a>
+
+    <button onclick="confirmJoined()" class="text-sm text-slate-500 hover:text-sky-400 transition-colors mt-3 block w-full">
+      I have joined ✔
+    </button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="sticky top-0 z-40 glass" style="position:relative;z-index:40">
+  <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="location.reload()">
+      <div class="logo-icon">
+        <i data-lucide="film" class="w-5 h-5 text-white"></i>
+      </div>
+      <span class="font-extrabold text-xl hidden md:block brand">
+        <span class="brand-text">ADTV</span><span class="brand-accent">Movies</span>
+      </span>
+    </div>
+
+    <div class="relative w-full max-w-xl">
+      <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
+      <input id="searchInput" type="text"
+        class="w-full pl-11 pr-5 py-3"
+        placeholder="Search movies, titles, series…">
+    </div>
+
+    <div id="resultCount" class="shrink-0 hidden md:block">0 Results</div>
+  </div>
+</nav>
+
+<!-- MOVIES -->
+<main class="max-w-7xl mx-auto px-4 py-10" style="position:relative;z-index:10">
+  <div id="movieGrid"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+</main>
+
+<script>
+/* HOW POPUP TIMER */
+setTimeout(()=>{
+  document.getElementById("howClose").classList.remove("hidden");
+},5000);
+document.getElementById("howClose").onclick=()=>{
+  document.getElementById("howPopup").style.animation="fadeOut .3s ease forwards";
+  setTimeout(()=>document.getElementById("howPopup").classList.add("hidden"),300);
+};
+
+/* JOIN LOGIC */
+function isJoined(){return localStorage.getItem("joined_adtvmovies")==="yes"}
+function confirmJoined(){
+  localStorage.setItem("joined_adtvmovies","yes");
+  document.getElementById("joinPopup").classList.add("hidden");
+}
+
+/* GET FILE */
+function handleGetFile(movieName){
+  if(!isJoined()){
+    document.getElementById("joinPopup").classList.remove("hidden");
+    return;
+  }
+  const cmd=`${movieName}`;
+  navigator.clipboard.writeText(cmd).then(()=>{
+    window.open("https://t.me/adtvmovies","_blank");
+  });
+}
+
+/* RIPPLE EFFECT */
+function addRipple(btn, e){
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(r);
+  setTimeout(()=>r.remove(), 700);
+}
+
+/* APP */
+let allMovies=[];
+const grid=document.getElementById("movieGrid");
+const search=document.getElementById("searchInput");
+const countEl=document.getElementById("resultCount");
+
+function formatBytes(b){
+  if(!b)return"Unknown";
+  const s=["B","KB","MB","GB"];
+  let i=Math.floor(Math.log(b)/Math.log(1024));
+  return(b/Math.pow(1024,i)).toFixed(2)+" "+s[i];
+}
+
+function createCard(m){
+  const name=m[1], size=m[2];
+  return`
+  <div class="movie-card">
+    <h3 class="card-title">${name}</h3>
+    <div class="mt-auto space-y-3">
+      <div class="size-badge">
+        <span>File Size</span>
+        <span class="val">${formatBytes(size)}</span>
+      </div>
+      <button class="get-btn" onclick="handleGetFile('${name.replace(/'/g,"\\'")}')" onmousedown="addRipple(this,event)">
+        <span>Get File ↗</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function updateCount(n){
+  countEl.textContent=`${n.toLocaleString()} Result${n!==1?'s':''}`;
+}
+
+function render(list){
+  if(list.length===0){
+    grid.innerHTML=`<div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <p class="text-xl font-bold brand text-slate-600">No results found</p>
+      <p class="text-slate-700 text-sm">Try a different search term</p>
+    </div>`;
+  } else {
+    grid.innerHTML=list.map(createCard).join("");
+  }
+  updateCount(list.length);
+  lucide.createIcons();
+}
+
+async function init(){
+  const r=await fetch("movies.json");
+  allMovies=await r.json();
+  render(allMovies.slice(0,40));
+}
+
+let debounceTimer;
+search.addEventListener("input",e=>{
+  clearTimeout(debounceTimer);
+  debounceTimer=setTimeout(()=>{
+    const q=e.target.value.toLowerCase();
+    render(allMovies.filter(m=>m[1].toLowerCase().includes(q)).slice(0,50));
+  },120);
+});
+
+init();
+
+/* FADE OUT KEYFRAME INJECTION */
+const style=document.createElement('style');
+style.textContent='@keyframes fadeOut{to{opacity:0}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
